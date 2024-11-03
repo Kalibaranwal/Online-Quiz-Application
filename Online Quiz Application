@@ -1,0 +1,99 @@
+#include <iostream>
+#include <chrono>
+#include <thread>
+#include <vector>
+#include <string>
+
+using namespace std;
+using namespace std::chrono;
+
+struct Question {
+    string questionText;
+    vector<string> options;
+    char correctAnswer;
+};
+
+class Quiz {
+public:
+    Quiz() : score(0) {
+        loadQuestions();
+    }
+
+    void start() {
+        cout << "Welcome to the Quiz! You have " << TIME_LIMIT << " seconds for each question.\n";
+        cout << "Press Enter to start...";
+        cin.ignore();
+
+        for (const auto &question : questions) {
+            if (!askQuestion(question)) {
+                cout << "Time's up!\n";
+            }
+        }
+
+        cout << "\nQuiz finished! Your total score is: " << score << "/" << questions.size() * POINTS_PER_CORRECT_ANSWER << "\n";
+    }
+
+private:
+    vector<Question> questions;
+    int score;
+    const int TIME_LIMIT = 10;  // seconds
+    const int POINTS_PER_CORRECT_ANSWER = 10;
+
+    void loadQuestions() {
+        // Add questions to the quiz (hardcoded for simplicity)
+        questions.push_back({"What is the capital of France?", {"A) Berlin", "B) Madrid", "C) Paris", "D) Rome"}, 'C'});
+        questions.push_back({"What is 2 + 2?", {"A) 3", "B) 4", "C) 5", "D) 6"}, 'B'});
+        questions.push_back({"Who wrote 'To Kill a Mockingbird'?", {"A) Harper Lee", "B) J.K. Rowling", "C) Ernest Hemingway", "D) Mark Twain"}, 'A'});
+    }
+
+    bool askQuestion(const Question &q) {
+        cout << "\n" << q.questionText << "\n";
+        for (const auto &option : q.options) {
+            cout << option << "\n";
+        }
+        cout << "Your answer (A, B, C, D): ";
+
+        // Start timer
+        auto startTime = high_resolution_clock::now();
+
+        char answer;
+        bool timedOut = false;
+        while (true) {
+            if (cin >> answer) {
+                answer = toupper(answer); // Convert answer to uppercase
+                break;
+            } else {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid input. Please enter A, B, C, or D: ";
+            }
+
+            // Check if time has exceeded the limit
+            auto currentTime = high_resolution_clock::now();
+            auto duration = duration_cast<seconds>(currentTime - startTime).count();
+            if (duration >= TIME_LIMIT) {
+                timedOut = true;
+                break;
+            }
+        }
+
+        if (timedOut) {
+            return false;
+        }
+
+        if (answer == q.correctAnswer) {
+            cout << "Correct!\n";
+            score += POINTS_PER_CORRECT_ANSWER;
+        } else {
+            cout << "Wrong! The correct answer was " << q.correctAnswer << ".\n";
+        }
+
+        return true;
+    }
+};
+
+int main() {
+    Quiz quiz;
+    quiz.start();
+    return 0;
+}
